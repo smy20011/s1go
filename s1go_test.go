@@ -4,6 +4,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"testing"
 )
@@ -11,6 +12,7 @@ import (
 var (
 	username = flag.String("username", "", "username")
 	password = flag.String("password", "", "password")
+	real     = flag.Bool("real", false, "Send real request to s1 backend.")
 )
 
 type MockTransport struct {
@@ -23,6 +25,9 @@ func (m *MockTransport) RoundTrip(req *http.Request) (resp *http.Response, err e
 }
 
 func mockS1Client(resp *http.Response, err error) *S1Client {
+	if resp != nil && resp.Body == nil {
+		resp.Body = ioutil.NopCloser(nil)
+	}
 	httpClient := &http.Client{
 		Transport: &MockTransport{resp, err},
 	}
@@ -33,7 +38,7 @@ func mockS1Client(resp *http.Response, err error) *S1Client {
 
 func TestLoginError(t *testing.T) {
 	s1client := mockS1Client(nil, errors.New(""))
-	err := s1client.login("abc", "bcd")
+	err := s1client.Login("abc", "bcd")
 	if err == nil {
 		t.Errorf("Should return error")
 	}
@@ -41,10 +46,28 @@ func TestLoginError(t *testing.T) {
 
 func TestLoginFailed(t *testing.T) {
 	s1client := mockS1Client(&http.Response{}, nil)
-	err := s1client.login("abc", "bcd")
+	err := s1client.Login("abc", "bcd")
 	if err == nil {
 		t.Errorf("Shold return error")
 	}
+}
+
+func TestGetForum_RealRequestIssued(t *testing.T) {
+	if !*real {
+		t.SkipNow()
+	}
+
+	s1client := NewS1Client()
+	if len(*username) != 0 {
+		s1client.Login(*username, *password)
+	}
+
+	forums, _ := s1client.GetForums()
+	if len(forums) == 0 {
+		t.Error("Cannot find any forums")
+	}
+
+	fmt.Println(forums)
 }
 
 func TestRealLoginSuccess(t *testing.T) {
@@ -53,7 +76,7 @@ func TestRealLoginSuccess(t *testing.T) {
 	}
 
 	s1client := NewS1Client()
-	err := s1client.login(*username, *password)
+	err := s1client.Login(*username, *password)
 	if err != nil {
 		t.Error(err)
 	}
@@ -69,7 +92,7 @@ func TestLoginSuccess(t *testing.T) {
 	header.Add("Set-Cookie", cookie.String())
 	resp := &http.Response{Header: header}
 	s1client := mockS1Client(resp, nil)
-	if err := s1client.login("abc", "bcd"); err != nil {
+	if err := s1client.Login("abc", "bcd"); err != nil {
 		t.Error(err)
 	}
 }
