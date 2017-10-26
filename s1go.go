@@ -1,8 +1,11 @@
 package s1go
 
 import (
+	"bytes"
 	"errors"
+	"fmt"
 	"github.com/PuerkitoBio/goquery"
+	"golang.org/x/net/html"
 	"golang.org/x/net/publicsuffix"
 	"net/http"
 	"net/http/cookiejar"
@@ -29,6 +32,7 @@ type Forum struct {
 type Thread struct {
 	Title string
 	ID    int
+	Reply int
 	Forum Forum
 }
 
@@ -108,6 +112,70 @@ func (s *S1Client) GetForums() (forums []Forum, err error) {
 	return
 }
 
+// GetThreads returns threads in some forum at some page.
+func (s *S1Client) GetThreads(forum Forum, page int) (threads []Thread, err error) {
+	url := fmt.Sprintf(forumURLTemplate, forum.ID, page)
+
+	doc, err := s.getAndParase(url)
+	if err != nil {
+		return
+	}
+
+	nodes := doc.Find("ul[type] li")
+	for i := range nodes.Nodes {
+		node := nodes.Eq(i)
+		linkNode := node.Find("a")
+
+		link, exists := linkNode.Attr("href")
+		if !exists {
+			err = errors.New("Cannot find thread link")
+			return
+		}
+
+		thread := Thread{
+			Forum: forum,
+			Title: linkNode.Text(),
+			ID:    findIntAndParse(link),
+			Reply: findIntAndParse(node.Nodes[0].LastChild.Data),
+		}
+		threads = append(threads, thread)
+	}
+	return
+}
+
+// GetPosts returns posts of some thread at some page.
+func (s *S1Client) GetPosts(thread Thread, page int) (posts []*Post, err error) {
+	url := fmt.Sprintf(threadURLTemplate, thread.ID, page)
+	doc, err := s.getAndParase(url)
+	if err != nil {
+		return
+	}
+
+	authorNodes := doc.Find(".author")
+	timePattern := regexp.MustCompile("\\d+-\\d+-\\d+ \\d+:\\d+")
+	authorPattern := regexp.MustCompile("<strong>(.*)</strong>")
+	tzshanghai, _ := time.LoadLocation("Asia/Shanghai")
+	for i := range authorNodes.Nodes {
+		node := authorNodes.Eq(i)
+		html, _ := node.Html()
+
+		postTimeStr := timePattern.FindString(html)
+		postTime, err := time.ParseInLocation("2006-01-02 15:04", postTimeStr, tzshanghai)
+		if err != nil {
+			return posts, err
+		}
+		author := authorPattern.FindStringSubmatch(html)[1]
+
+		post := &Post{
+			Author:   author,
+			Content:  getPostContent(node),
+			PostTime: postTime,
+		}
+		posts = append(posts, post)
+	}
+	return posts, nil
+}
+
 func (s *S1Client) getAndParase(url string) (doc *goquery.Document, err error) {
 	resp, err := s.httpClient.Get(url)
 	if err != nil {
@@ -124,4 +192,23 @@ func findIntAndParse(s string) (result int) {
 	}
 	result, _ = strconv.Atoi(intStr)
 	return
+}
+
+func getPostContent(author *goquery.Selection) (content string) {
+	next := author.NextAllFiltered(".author,.page").Eq(0)
+	buf := bytes.Buffer{}
+
+	node := author.Nodes[0].NextSibling
+	for ; node != nil && node != next.Nodes[0]; node = node.NextSibling {
+		if node.Type == html.TextNode {
+			buf.WriteString(node.Data)
+		}
+	}
+	content = buf.String()
+
+	// Remove \t s at begin/end of a line
+	content = regexp.MustCompile("(?m:(^\\t+)|(\\t+$))").ReplaceAllString(content, "")
+	// Remove new lines at begin/end of a post.
+	content = regexp.MustCompile("(^[\\r\\n]+)|([\\r\\n]+)$").ReplaceAllString(content, "")
+	return content
 }
