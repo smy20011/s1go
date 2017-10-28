@@ -15,12 +15,14 @@ import (
 	"time"
 )
 
-const baseURL = "https://bbs.saraba1st.com/2b/"
-const loginURL = baseURL + "member.php?mod=logging&action=login&loginsubmit=yes&infloat=yes&lssubmit=yes&inajax=1"
-const frontPageURL = baseURL + "archiver/"
-const forumURLTemplate = baseURL + "archiver/fid-%d.html?page=%d"
-const threadURLTemplate = baseURL + "archiver/tid-%d.html?page=%d"
-const authCookie = "B7Y9_2132_auth"
+const (
+	baseURL           = "https://bbs.saraba1st.com/2b/"
+	loginURL          = baseURL + "member.php?mod=logging&action=login&loginsubmit=yes&infloat=yes&lssubmit=yes&inajax=1"
+	frontPageURL      = baseURL + "archiver/"
+	forumURLTemplate  = baseURL + "archiver/fid-%d.html?page=%d"
+	threadURLTemplate = baseURL + "archiver/tid-%d.html?page=%d"
+	authCookie        = "B7Y9_2132_auth"
+)
 
 // Forum represents a S1 Forum.
 type Forum struct {
@@ -41,6 +43,7 @@ type Post struct {
 	Author   string
 	PostTime time.Time
 	Content  string
+	Thread   Thread
 }
 
 // S1Client helps us interact with s1 backend with a presistant cookie.
@@ -160,7 +163,7 @@ func (s *S1Client) GetPosts(thread Thread, page int) (posts []*Post, err error) 
 		html, _ := node.Html()
 
 		postTimeStr := timePattern.FindString(html)
-		postTime, err := time.ParseInLocation("2006-01-02 15:04", postTimeStr, tzshanghai)
+		postTime, err := time.ParseInLocation("2006-1-2 15:04", postTimeStr, tzshanghai)
 		if err != nil {
 			return posts, err
 		}
@@ -170,6 +173,7 @@ func (s *S1Client) GetPosts(thread Thread, page int) (posts []*Post, err error) 
 			Author:   author,
 			Content:  getPostContent(node),
 			PostTime: postTime,
+			Thread:   thread,
 		}
 		posts = append(posts, post)
 	}
