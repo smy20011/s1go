@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"flag"
 	_ "github.com/mattn/go-sqlite3"
-	"github.com/smy20011/s1go"
+	"github.com/smy20011/s1go/client"
 	"log"
 	"sync"
 	"time"
@@ -53,7 +53,7 @@ func NewCrawler() Crawler {
 	panicIfErr(err)
 
 	// Create s1 client and login if possible.
-	client := s1go.NewS1Client()
+	client := client.NewS1Client()
 	if len(*username) != 0 && len(*password) != 0 {
 		err := client.Login(*username, *password)
 		panicIfErr(err)
@@ -71,13 +71,13 @@ func NewCrawler() Crawler {
 
 type Crawler struct {
 	DB            *sql.DB
-	S1Client      *s1go.S1Client
+	S1Client      *client.S1Client
 	PagePerForum  int
 	PagePerThread int
 	dbLoc         *sync.Mutex
 }
 
-func (c *Crawler) FetchForum(forum s1go.Forum) error {
+func (c *Crawler) FetchForum(forum client.Forum) error {
 	count := 0
 	for page := 1; page <= c.PagePerForum; page++ {
 		threads, err := c.S1Client.GetThreads(forum, page)
@@ -111,7 +111,7 @@ func (c *Crawler) FetchForum(forum s1go.Forum) error {
 	return nil
 }
 
-func (c *Crawler) fetchThread(thread s1go.Thread) error {
+func (c *Crawler) fetchThread(thread client.Thread) error {
 	count := 0
 	for page := 1; page <= c.PagePerThread; page++ {
 		// Exit if reach end of thread.
@@ -135,7 +135,7 @@ func (c *Crawler) fetchThread(thread s1go.Thread) error {
 	return nil
 }
 
-func (c *Crawler) savePost(index int, post *s1go.Post) {
+func (c *Crawler) savePost(index int, post *client.Post) {
 	c.executeSql(`
 		INSERT INTO
 			S1Posts(
@@ -147,7 +147,7 @@ func (c *Crawler) savePost(index int, post *s1go.Post) {
 		time.Now().Unix())
 }
 
-func (c *Crawler) saveThread(index int, thread s1go.Thread) {
+func (c *Crawler) saveThread(index int, thread client.Thread) {
 	c.executeSql(`
 		INSERT INTO S1Threads(
 			thread_id, forum_id, thread_index,
@@ -157,7 +157,7 @@ func (c *Crawler) saveThread(index int, thread s1go.Thread) {
 		thread.Title, thread.Reply, time.Now().Unix())
 }
 
-func (c *Crawler) isThreadFetched(thread s1go.Thread) bool {
+func (c *Crawler) isThreadFetched(thread client.Thread) bool {
 	c.dbLoc.Lock()
 	result, err := c.DB.Query(`
 		SELECT

@@ -2,7 +2,7 @@ package main
 
 import (
 	"flag"
-	"github.com/smy20011/s1go"
+	"github.com/smy20011/s1go/client"
 	"log"
 	"strconv"
 	"strings"
@@ -31,7 +31,7 @@ func main() {
 	}
 }
 
-func getForums(crawler Crawler) (result []s1go.Forum) {
+func getForums(crawler Crawler) (result []client.Forum) {
 	forums, err := crawler.S1Client.GetForums()
 	panicIfErr(err)
 
@@ -39,7 +39,7 @@ func getForums(crawler Crawler) (result []s1go.Forum) {
 		return forums
 	}
 
-	forumMap := map[int]s1go.Forum{}
+	forumMap := map[int]client.Forum{}
 	for _, forum := range forums {
 		forumMap[forum.ID] = forum
 	}

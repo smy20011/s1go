@@ -1,4 +1,4 @@
-package s1go
+package client
 
 import (
 	"bytes"

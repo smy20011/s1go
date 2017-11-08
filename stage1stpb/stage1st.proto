@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package stage1stpb;
+
+message Post {
+    string content = 1;
+    string author = 2;
+    int32 post_time_msec = 3;
+}
+
+message ThreadInfo {
+    int32 rank = 1;
+    int32 replies = 2;
+}
+
+message Thread {
+    int32 thread_id = 1;
+    int32 forum_id = 2;
+    repeated ThreadInfo thread_infos = 3;
+    repeated Post posts = 4;
+}
