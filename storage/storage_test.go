@@ -1,13 +1,14 @@
 package storage
 
 import (
+	"github.com/golang/protobuf/proto"
 	"github.com/smy20011/s1go/stage1stpb"
 	"io/ioutil"
 	"os"
-	"path/filepath"
-	"testing"
-	"github.com/golang/protobuf/proto"
 	"path"
+	"path/filepath"
+	"sync/atomic"
+	"testing"
 )
 
 var (
@@ -35,25 +36,28 @@ func TestStorage(t *testing.T) {
 
 func BenchmarkStorage(b *testing.B) {
 	tmpDir, _ = ioutil.TempDir("", "DB")
+	defer os.RemoveAll(tmpDir + "/")
 	tmpFile := path.Join(tmpDir, "benchmark.DB")
 	storage, _ := Open(tmpFile)
-
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		thread := stage1stpb.Thread{ThreadId: int32(i)}
-		storage.Put(&thread)
-		storage.Get(i)
-	}
+	var counter int32 = 0
+	b.SetParallelism(100)
+	b.RunParallel(func(pb *testing.PB) {
+		for pb.Next() {
+			threadId := atomic.AddInt32(&counter, 1)
+			thread := stage1stpb.Thread{ThreadId: threadId}
+			storage.Put(&thread)
+			storage.Get(int(threadId))
+		}
+	})
 	storage.Close()
-	os.RemoveAll(tmpDir + "/")
+}
+
+func ExecTest(m *testing.M) (retcode int) {
+	tmpDir, _ = ioutil.TempDir("", "DB")
+	defer os.RemoveAll(tmpDir + "/")
+	return m.Run()
 }
 
 func TestMain(m *testing.M) {
-	tmpDir, _ = ioutil.TempDir("", "DB")
-	retcode := m.Run()
-	err := os.RemoveAll(tmpDir + "/")
-	if err != nil {
-		panic(err)
-	}
-	os.Exit(retcode)
+	os.Exit(ExecTest(m))
 }
