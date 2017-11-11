@@ -12,12 +12,12 @@ message ThreadInfo {
     int32 rank = 1;
     int32 replies = 2;
     int64 timestamp = 3;
-    string title = 4;
 }
 
 message Thread {
     int32 thread_id = 1;
     int32 forum_id = 2;
+    string title = 3;
     repeated ThreadInfo thread_infos = 4;
     repeated Post posts = 5;
 }
