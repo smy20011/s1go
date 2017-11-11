@@ -1,14 +1,17 @@
 PROTO_DIR := stage1stpb
 
-.PHONY: install proto
+all: proto bindata
 
-all: install proto
+.PHONY: proto bindata clean
 
-install: proto
+install: proto bindata
 	go install .
 
 proto:
 	protoc -I ${PROTO_DIR} --go_out ${PROTO_DIR} ${PROTO_DIR}/*.proto
+
+bindata:
+	go-bindata --pkg=data -o test_util/data/bindata.go --prefix test_util test_util/data
 
 clean:
 	rm -rf stage1st.db*
