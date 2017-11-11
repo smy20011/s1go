@@ -48,8 +48,8 @@ type Post struct {
 
 // S1Client helps us interact with s1 backend with a presistant cookie.
 type S1Client struct {
-	httpClient *http.Client
-	cookies    []*http.Cookie
+	HttpClient *http.Client
+	Cookies    []*http.Cookie
 }
 
 // NewS1Client creates a new S1 client.
@@ -60,7 +60,7 @@ func NewS1Client() *S1Client {
 	}
 
 	httpClient := &http.Client{Jar: jar}
-	return &S1Client{httpClient: httpClient}
+	return &S1Client{HttpClient: httpClient}
 }
 
 // Login retrieve S1 Cookie by simulate user's login. S1Client will use the same
@@ -74,7 +74,7 @@ func (s *S1Client) Login(username string, password string) (err error) {
 		"handlekey":      {"ls"},
 	}
 
-	resp, err := s.httpClient.PostForm(loginURL, data)
+	resp, err := s.HttpClient.PostForm(loginURL, data)
 	if err != nil {
 		return err
 	}
@@ -82,7 +82,7 @@ func (s *S1Client) Login(username string, password string) (err error) {
 
 	for _, cookie := range resp.Cookies() {
 		if cookie.Name == authCookie {
-			s.cookies = resp.Cookies()
+			s.Cookies = resp.Cookies()
 			return nil
 		}
 	}
@@ -181,7 +181,7 @@ func (s *S1Client) GetPosts(thread Thread, page int) (posts []*Post, err error) 
 }
 
 func (s *S1Client) getAndParase(url string) (doc *goquery.Document, err error) {
-	resp, err := s.httpClient.Get(url)
+	resp, err := s.HttpClient.Get(url)
 	if err != nil {
 		return
 	}

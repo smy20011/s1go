@@ -14,7 +14,7 @@ var (
 
 func CreateMockS1Client() *S1Client {
 	return &S1Client{
-		httpClient: &http.Client{
+		HttpClient: &http.Client{
 			Transport: &test_util.MockS1Website{},
 		},
 	}

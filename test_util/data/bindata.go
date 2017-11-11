@@ -86,7 +86,7 @@ func dataBindataGo() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "data/bindata.go", size: 0, mode: os.FileMode(420), modTime: time.Unix(1510386662, 0)}
+	info := bindataFileInfo{name: "data/bindata.go", size: 0, mode: os.FileMode(436), modTime: time.Unix(1510421062, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -106,7 +106,7 @@ func dataForumHtml() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "data/forum.html", size: 8649, mode: os.FileMode(420), modTime: time.Unix(1510386271, 0)}
+	info := bindataFileInfo{name: "data/forum.html", size: 8649, mode: os.FileMode(436), modTime: time.Unix(1510421009, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -126,7 +126,7 @@ func dataIndexHtml() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "data/index.html", size: 3008, mode: os.FileMode(420), modTime: time.Unix(1510383785, 0)}
+	info := bindataFileInfo{name: "data/index.html", size: 3008, mode: os.FileMode(436), modTime: time.Unix(1510421009, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -146,7 +146,7 @@ func dataThreadHtml() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "data/thread.html", size: 10092, mode: os.FileMode(420), modTime: time.Unix(1510386294, 0)}
+	info := bindataFileInfo{name: "data/thread.html", size: 10092, mode: os.FileMode(436), modTime: time.Unix(1510421009, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }

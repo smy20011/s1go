@@ -2,7 +2,7 @@ PROTO_DIR := stage1stpb
 
 all: proto bindata
 
-.PHONY: proto bindata clean
+.PHONY: proto bindata clean test
 
 install: proto bindata
 	go install .
@@ -15,3 +15,6 @@ bindata:
 
 clean:
 	rm -rf stage1st.db*
+
+test:
+	go test ./...
