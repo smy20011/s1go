@@ -3,9 +3,9 @@ package crawler
 import (
 	"fmt"
 	"github.com/golang/protobuf/jsonpb"
+	"log"
 	"net/http"
 	"strconv"
-	"log"
 )
 
 func (c *Crawler) StartQueryServer() {
@@ -25,7 +25,6 @@ func (c *Crawler) StartQueryServer() {
 		marshaler := jsonpb.Marshaler{}
 		marshaler.Marshal(w, thread)
 		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
 	})
 	go http.ListenAndServe(":8080", nil)
 	log.Println("Start query server at :8080")
