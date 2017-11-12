@@ -22,7 +22,6 @@ func CreateMockS1Client() *client.S1Client {
 }
 
 func GetTempDir() string {
-	return "ramdisk"
 	p, err := ioutil.TempDir("", "DB")
 	if err != nil {
 		panic(err)

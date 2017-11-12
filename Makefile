@@ -1,10 +1,10 @@
 PROTO_DIR := stage1stpb
 
-all: proto bindata
+all: proto bindata install
 
 .PHONY: proto bindata clean test
 
-install: proto bindata
+install:
 	go install .
 
 proto:

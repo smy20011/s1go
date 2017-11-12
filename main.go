@@ -23,6 +23,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	c.StartQueryServer()
 	defer c.Close()
 	trapCtrlCAndClose(c)
 	if len(*username) > 0 {
