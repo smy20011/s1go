@@ -2,51 +2,31 @@ package main
 
 import (
 	"flag"
-	"github.com/smy20011/s1go/client"
-	"log"
-	"strconv"
-	"strings"
 	"time"
+	"github.com/smy20011/s1go/crawler"
 )
 
 var (
-	forumIds = flag.String("forum_ids", "", "Comma-separated forum ids, empty means all forum")
 	interval = flag.Int64("interval", 3600, "Seconds between different fetch")
+	username = flag.String("username", "", "Stage1st username")
+	password = flag.String("password", "", "Stage1st password")
 )
 
 func main() {
 	flag.Parse()
 
-	crawler := NewCrawler()
-	defer crawler.Close()
+	c, err := crawler.NewCrawler()
+	if err != nil {
+		panic(err)
+	}
+	if len(*username) > 0 {
+		c.Login(*username, *password)
+	}
 
-	forums := getForums(crawler)
 	trigger := time.Tick(time.Second * time.Duration(*interval))
 	for {
-		for _, forum := range forums {
-			log.Printf("Start Fetch Forum %s(%d)", forum.Title, forum.ID)
-			go crawler.FetchForum(forum)
-		}
+		c.FetchAllForums()
 		<-trigger
 	}
 }
 
-func getForums(crawler Crawler) (result []client.Forum) {
-	forums, err := crawler.S1Client.GetForums()
-	panicIfErr(err)
-
-	if len(*forumIds) == 0 {
-		return forums
-	}
-
-	forumMap := map[int]client.Forum{}
-	for _, forum := range forums {
-		forumMap[forum.ID] = forum
-	}
-	for _, idStr := range strings.Split(*forumIds, ",") {
-		id, err := strconv.Atoi(idStr)
-		panicIfErr(err)
-		result = append(result, forumMap[id])
-	}
-	return result
-}

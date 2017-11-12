@@ -8,8 +8,8 @@ import (
 )
 
 var (
-	username = flag.String("username", "", "username")
-	password = flag.String("password", "", "password")
+	username = flag.String("user", "", "username")
+	password = flag.String("pass", "", "password")
 )
 
 func CreateMockS1Client() *S1Client {

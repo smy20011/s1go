@@ -21,15 +21,8 @@ func CreateMockS1Client() *client.S1Client {
 	}
 }
 
-func CreateTestCrawler(filename string) *Crawler {
-	s, err := storage.Open(filename)
-	if err != nil {
-		panic(err)
-	}
-	return NewCrawler(CreateMockS1Client(), &s)
-}
-
 func GetTempDir() string {
+	return "ramdisk"
 	p, err := ioutil.TempDir("", "DB")
 	if err != nil {
 		panic(err)
@@ -50,7 +43,7 @@ func CreateTestFixture() *TestFixture {
 	if err != nil {
 		panic(err)
 	}
-	f.crawler = NewCrawler(CreateMockS1Client(), &s)
+	f.crawler = &Crawler{CreateMockS1Client(), &s}
 	return &f
 }
 

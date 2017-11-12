@@ -7,6 +7,7 @@ import (
 	"log"
 	"sync"
 	"time"
+	"flag"
 )
 
 var (
@@ -14,6 +15,7 @@ var (
 	postPerPage     = 30
 	maxThreadPage   = 3
 	maxThreadUpdate = 500
+	dbFile = flag.String("db", "Stage1st.BoltDB", "Path to stage1st database.")
 )
 
 type Crawler struct {
@@ -21,11 +23,15 @@ type Crawler struct {
 	Storage  *storage.Storage
 }
 
-func NewCrawler(client *client.S1Client, storage *storage.Storage) *Crawler {
-	return &Crawler{
-		S1Client: client,
-		Storage:  storage,
+func NewCrawler() (*Crawler, error) {
+	s, err := storage.Open(*dbFile)
+	if err != nil {
+		return nil, err
 	}
+	return &Crawler{
+		S1Client: client.NewS1Client(),
+		Storage: &s,
+	}, nil
 }
 
 func (c *Crawler) Login(username, password string) error {
@@ -39,12 +45,14 @@ func (c *Crawler) FetchAllForums() error {
 	}
 	wg := sync.WaitGroup{}
 	for _, forum := range forums {
+		f := forum
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			err := c.fetchForum(forum)
+			log.Printf("Start fetch forum %s(%d)\n", f.Title, f.ID)
+			err := c.fetchForum(f)
 			if err != nil {
-				log.Printf("Error while fetch forum %s: %v", forum.Title, err)
+				log.Printf("Error while fetch forum %s: %v\n", f.Title, err)
 			}
 		}()
 	}
@@ -68,6 +76,7 @@ func (c *Crawler) fetchForum(forum client.Forum) (err error) {
 	for index, thread := range threads {
 		err = c.fetchThread(index, thread)
 		if err != nil {
+			log.Printf("Error while fetch thread %s(%d)\n", thread.Title, thread.ID)
 			return
 		}
 	}
@@ -80,6 +89,7 @@ func (c *Crawler) fetchThread(index int, thread client.Thread) error {
 		return err
 	}
 	if savedThread.ThreadId != int32(thread.ID) {
+		log.Printf("New thread :%s\n", thread.Title)
 		savedThread = &stage1stpb.Thread{
 			ThreadId: int32(thread.ID),
 			ForumId:  int32(thread.Forum.ID),
