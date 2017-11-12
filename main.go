@@ -4,6 +4,10 @@ import (
 	"flag"
 	"time"
 	"github.com/smy20011/s1go/crawler"
+	"os"
+	"os/signal"
+	"syscall"
+	"log"
 )
 
 var (
@@ -19,6 +23,8 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	defer c.Close()
+	trapCtrlCAndClose(c)
 	if len(*username) > 0 {
 		c.Login(*username, *password)
 	}
@@ -30,3 +36,13 @@ func main() {
 	}
 }
 
+func trapCtrlCAndClose(c *crawler.Crawler) {
+	channel := make(chan os.Signal, 2)
+	signal.Notify(channel, os.Interrupt, syscall.SIGTERM)
+	go func() {
+		<- channel
+		log.Printf("Gracefully shutdown!")
+		c.Close()
+		os.Exit(0)
+	}()
+}
