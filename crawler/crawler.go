@@ -126,7 +126,7 @@ func (c *Crawler) fetchThread(index int, thread client.Thread) error {
 func (c *Crawler) fetchNewPosts(thread client.Thread, fetched int) (posts []*client.Post, err error) {
 	for _, page := range getPagesToFetch(fetched, thread.Reply) {
 		// +1 Because S1 use 1 as the first page of thread.
-		p, err := c.S1Client.GetPosts(thread, page)
+		p, err := c.S1Client.GetPosts(thread, page+1)
 		if err != nil {
 			return posts, err
 		}
@@ -144,8 +144,11 @@ func (c *Crawler) fetchNewPosts(thread client.Thread, fetched int) (posts []*cli
 func getPagesToFetch(fetched, current int) (result []int) {
 	for i := 0; i < current/postPerPage+1 && i < maxThreadPage; i++ {
 		postStart := i * postPerPage
-		if postStart >= fetched {
-			result = append(result, i+1)
+		postEnd := i*postPerPage + postPerPage
+		if postStart >= fetched ||
+			(postEnd >= fetched && fetched-current > postPerPage) ||
+			fetched == 0 {
+			result = append(result, i)
 		}
 	}
 	return
