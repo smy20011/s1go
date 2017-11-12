@@ -1,13 +1,13 @@
 package crawler
 
 import (
+	"flag"
 	"github.com/smy20011/s1go/client"
 	"github.com/smy20011/s1go/stage1stpb"
 	"github.com/smy20011/s1go/storage"
 	"log"
 	"sync"
 	"time"
-	"flag"
 )
 
 var (
@@ -15,7 +15,7 @@ var (
 	postPerPage     = 30
 	maxThreadPage   = 3
 	maxThreadUpdate = 500
-	dbFile = flag.String("db", "Stage1st.BoltDB", "Path to stage1st database.")
+	dbFile          = flag.String("db", "Stage1st.BoltDB", "Path to stage1st database.")
 )
 
 type Crawler struct {
@@ -30,7 +30,7 @@ func NewCrawler() (*Crawler, error) {
 	}
 	return &Crawler{
 		S1Client: client.NewS1Client(),
-		Storage: &s,
+		Storage:  &s,
 	}, nil
 }
 
@@ -67,7 +67,7 @@ func (c *Crawler) Close() {
 func (c *Crawler) fetchForum(forum client.Forum) (err error) {
 	threads := []client.Thread{}
 	for i := 0; i < depth; i++ {
-		newThreads, err := c.S1Client.GetThreads(forum, i)
+		newThreads, err := c.S1Client.GetThreads(forum, i+1)
 		if err != nil {
 			return err
 		}
@@ -126,7 +126,7 @@ func (c *Crawler) fetchThread(index int, thread client.Thread) error {
 func (c *Crawler) fetchNewPosts(thread client.Thread, fetched int) (posts []*client.Post, err error) {
 	for _, page := range getPagesToFetch(fetched, thread.Reply) {
 		// +1 Because S1 use 1 as the first page of thread.
-		p, err := c.S1Client.GetPosts(thread, page+1)
+		p, err := c.S1Client.GetPosts(thread, page)
 		if err != nil {
 			return posts, err
 		}
@@ -145,7 +145,7 @@ func getPagesToFetch(fetched, current int) (result []int) {
 	for i := 0; i < current/postPerPage+1 && i < maxThreadPage; i++ {
 		postStart := i * postPerPage
 		if postStart >= fetched {
-			result = append(result, i)
+			result = append(result, i+1)
 		}
 	}
 	return
