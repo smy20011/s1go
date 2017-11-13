@@ -1,6 +1,7 @@
 package crawler
 
 import (
+	"fmt"
 	"github.com/smy20011/s1go/client"
 	"github.com/smy20011/s1go/storage"
 	"github.com/smy20011/s1go/test_util"
@@ -10,7 +11,6 @@ import (
 	"os"
 	"path"
 	"testing"
-	"fmt"
 )
 
 func CreateMockS1Client() *client.S1Client {
@@ -60,7 +60,23 @@ func TestCrawler_fetchThread(t *testing.T) {
 		t.Fatal(err)
 	}
 	assert.Equal(t, int32(12345), thread.ThreadId)
-	assert.Equal(t, 20, len(thread.Posts))
+	assert.Equal(t, 21, len(thread.Posts))
+	assert.Equal(t, 1, len(thread.ThreadInfos))
+}
+
+func TestCrawler_fetchThread_singleThread(t *testing.T) {
+	f := CreateTestFixture()
+	defer f.Cleanup()
+	f.crawler.fetchThread(1, client.Thread{
+		ID:    test_util.SinglePostThread,
+		Reply: 0,
+	})
+	thread, err := f.crawler.Storage.Get(test_util.SinglePostThread)
+	if err != nil {
+		t.Fatal(err)
+	}
+	assert.Equal(t, int32(test_util.SinglePostThread), thread.ThreadId)
+	assert.Equal(t, 1, len(thread.Posts))
 	assert.Equal(t, 1, len(thread.ThreadInfos))
 }
 
@@ -79,17 +95,32 @@ func TestCrawler_fetchThread_maxPost(t *testing.T) {
 func TestCrawler_fetchThread_newPosts(t *testing.T) {
 	f := CreateTestFixture()
 	defer f.Cleanup()
-	f.crawler.fetchThread(12345, client.Thread{ID:12345, Reply: 30})
+	f.crawler.fetchThread(12345, client.Thread{ID: 12345, Reply: 30})
 	thread, _ := f.crawler.Storage.Get(12345)
-	assert.Equal(t, 30, len(thread.Posts))
+	assert.Equal(t, 31, len(thread.Posts))
 
-	f.crawler.fetchThread(12345, client.Thread{ID:12345, Reply: 40})
+	f.crawler.fetchThread(12345, client.Thread{ID: 12345, Reply: 70})
 	thread, _ = f.crawler.Storage.Get(12345)
-	assert.Equal(t, 40, len(thread.Posts))
+	assert.Equal(t, 71, len(thread.Posts))
+	assert.Equal(t, 2, len(thread.ThreadInfos))
+}
+
+func TestCrawler_fetchThread_newPosts_notEnoughPost(t *testing.T) {
+	f := CreateTestFixture()
+	defer f.Cleanup()
+	f.crawler.fetchThread(12345, client.Thread{ID: 12345, Reply: 30})
+	thread, _ := f.crawler.Storage.Get(12345)
+	assert.Equal(t, 1, len(thread.ThreadInfos))
+	assert.Equal(t, 31, len(thread.Posts))
+
+	f.crawler.fetchThread(12345, client.Thread{ID: 12345, Reply: 40})
+	thread, _ = f.crawler.Storage.Get(12345)
+	assert.Equal(t, 31, len(thread.Posts))
 	assert.Equal(t, 2, len(thread.ThreadInfos))
 }
 
 func TestCrawler_FetchAllForums(t *testing.T) {
+	t.SkipNow()
 	f := CreateTestFixture()
 	defer f.Cleanup()
 	maxThreadPage = 1
@@ -102,10 +133,10 @@ func TestCrawler_StorageSize(t *testing.T) {
 	f := CreateTestFixture()
 	defer f.Cleanup()
 
-	for i := 1 ; i < 500 ; i++ {
+	for i := 1; i < 500; i++ {
 		f.crawler.fetchThread(i, client.Thread{ID: i, Reply: 100})
 	}
 	info, _ := os.Stat(f.file)
 	f.crawler.Storage.Close()
-	fmt.Printf("Storage Size for 500 threads: %v MB\n", float32(info.Size()) / 1024.0 / 1024.0)
+	fmt.Printf("Storage Size for 500 threads: %v MB\n", float32(info.Size())/1024.0/1024.0)
 }

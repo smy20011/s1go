@@ -128,7 +128,8 @@ func (c *Crawler) fetchThread(index int, thread client.Thread) error {
 }
 
 func (c *Crawler) fetchNewPosts(thread client.Thread, fetched int) (posts []*client.Post, err error) {
-	pages := getPagesToFetch(fetched, thread.Reply)
+	// + 1 Because S1 the first post is not considered as reply
+	pages := getPagesToFetch(fetched, thread.Reply+1)
 	for _, page := range pages {
 		// +1 Because S1 use 1 as the first page of thread.
 		networkVar.Add("post", 1)
@@ -139,7 +140,7 @@ func (c *Crawler) fetchNewPosts(thread client.Thread, fetched int) (posts []*cli
 		// Append new posts.
 		for index, post := range p {
 			postIndex := page*postPerPage + index
-			if postIndex >= fetched && postIndex < thread.Reply {
+			if postIndex >= fetched && postIndex <= thread.Reply {
 				posts = append(posts, post)
 			}
 		}
@@ -148,12 +149,14 @@ func (c *Crawler) fetchNewPosts(thread client.Thread, fetched int) (posts []*cli
 }
 
 func getPagesToFetch(fetched, current int) (result []int) {
+	// Skip fetch when not enough threads.
+	if current-fetched < postPerPage/2 && fetched != 0 {
+		return
+	}
 	for i := 0; i < current/postPerPage+1 && i < maxThreadPage; i++ {
 		postStart := i * postPerPage
 		postEnd := i*postPerPage + postPerPage
-		if postStart >= fetched ||
-			(postEnd >= fetched && fetched-current > postPerPage) ||
-			fetched == 0 {
+		if postStart >= fetched || postEnd >= fetched {
 			result = append(result, i)
 		}
 	}

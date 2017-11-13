@@ -3,6 +3,7 @@ package client
 import (
 	"flag"
 	"github.com/smy20011/s1go/test_util"
+	"github.com/stretchr/testify/assert"
 	"net/http"
 	"testing"
 )
@@ -51,6 +52,15 @@ func TestGetPosts(t *testing.T) {
 	if len(posts) != 30 {
 		t.Errorf("Wrong Posts Count %v", len(posts))
 	}
+}
+
+func TestGetSinglePost(t *testing.T) {
+	client := CreateMockS1Client()
+	posts, err := client.GetPosts(Thread{
+		ID: test_util.SinglePostThread,
+	}, 0)
+	assert.Nil(t, err)
+	assert.Equal(t, 1, len(posts))
 }
 
 func TestLogin(t *testing.T) {

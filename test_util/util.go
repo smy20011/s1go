@@ -8,10 +8,7 @@ import (
 	"strings"
 )
 
-var contentMap = map[string]string{
-	"fid": "data/forum.html",
-	"tid": "data/thread.html",
-}
+const SinglePostThread = 111111
 
 type MockS1Website struct {
 }
@@ -20,13 +17,17 @@ func (m *MockS1Website) RoundTrip(req *http.Request) (resp *http.Response, err e
 	resp = &http.Response{
 		Request: req,
 	}
-	for key, file := range contentMap {
-		if strings.Contains(req.URL.Path, key) {
-			resp.Body = createResponseBody(file)
-			return
-		}
+
+	url := req.URL.Path
+	if strings.Contains(url, "111111") {
+		resp.Body = createResponseBody("data/single.html")
+	} else if strings.Contains(url, "fid") {
+		resp.Body = createResponseBody("data/forum.html")
+	} else if strings.Contains(url, "tid") {
+		resp.Body = createResponseBody("data/thread.html")
+	} else {
+		resp.Body = createResponseBody("data/index.html")
 	}
-	resp.Body = createResponseBody("data/index.html")
 	return
 }
 
