@@ -156,7 +156,7 @@ func getPagesToFetch(fetched, current int) (result []int) {
 	for i := 0; i < current/postPerPage+1 && i < maxThreadPage; i++ {
 		postStart := i * postPerPage
 		postEnd := i*postPerPage + postPerPage
-		if postStart >= fetched || postEnd >= fetched {
+		if postStart >= fetched || postEnd > fetched {
 			result = append(result, i)
 		}
 	}
