@@ -2,6 +2,7 @@ package client
 
 import (
 	"bytes"
+	"crypto/tls"
 	"errors"
 	"fmt"
 	"github.com/PuerkitoBio/goquery"
@@ -59,7 +60,14 @@ func NewS1Client() *S1Client {
 		panic(err)
 	}
 
-	httpClient := &http.Client{Jar: jar}
+	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	}
+
+	httpClient := &http.Client{
+		Jar:       jar,
+		Transport: tr,
+	}
 	return &S1Client{HttpClient: httpClient}
 }
 
