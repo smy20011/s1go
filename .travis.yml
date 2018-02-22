@@ -1,0 +1,18 @@
+language: go
+go:
+- '1.10'
+script:
+  - go get -t -v ./...
+  - go get github.com/mitchellh/gox
+  - gox -os="linux" -arch="amd64 arm" ./...
+deploy:
+  provider: releases
+  skip_cleanup: true
+  api_key:
+    secure: Txkqfb8ejChwV+9fvMyThZPe08Ov8+KRnmCPTmEoTszg4go6b3dFGyIEGjMP7EIG9/NqYOe93ibXgz3+tJ5MHsnAi/opIJV00TOaIMXXwMnuTKjc3Crvca1WYJ26dcV38XJTmYsLTKaBvpHlC3ex2BluHq9mqqtgt/HQqfozqjhk8q4VBXw98+YLE//BOMlT5l8J+b4vDfwBVMY0Scp0q4ZOyzKsHPqOMqWAvbDRU/GXNUkhTcetYwLC3TA4duVMeiF+wvOxoL4TxaOKh3544LjNqMw28dZFx1iySdS9/rvWKObR7X8Noz6T/rSlqun8niBAXuhe7SeJLWGaipkwvrVrab2GZiHom+1V+zlLv6jVZqi1jx1SndgHVxyiOLYEzikRujUIrDsTRswhhyva0+t9sdfUtHAeWQUuXe5zzRJL8n9ekVjgSXepSkYF7Kw3flt62ttRjMQY9HCPtUVQuKkX4HXV2eal0MBgirb+XnD4QO/SA9y6i9/KAipIKN162YTD2Jr25JEPVVB7onxaUp2tb1hwX2wd3zlQ+E5Sgos3qJiWY0oSjP71AYNCwO9svS1G9bKeAJkbyWWKqFAJkfS1iX5wIP/Y19Cz12f4Nsp2+9DspZ6AJ8qdPi0OOqdvdzJjLSKiXTnXKI295/FJM79bIewaV++UpgvSVgrGbnY=
+  file:
+    - s1go_linux_amd64
+    - s1go_linux_arm
+  on:
+    repo: smy20011/s1go
+    tags: true
