@@ -19,7 +19,7 @@ var (
 	maxThreadUpdate = 500
 	dbFile          = flag.String("db", "Stage1st.BoltDB", "Path to stage1st database.")
 	networkVar      = expvar.NewMap("crawler/network")
-	lastFetchVar    = expvar.NewInt("carwler/lastfetchtime")
+	lastFetchVar    = expvar.NewInt("crawler/lastfetchtime")
 )
 
 type Crawler struct {
