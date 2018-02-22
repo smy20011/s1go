@@ -3,12 +3,13 @@ package crawler
 import (
 	"expvar"
 	"flag"
-	"github.com/smy20011/s1go/client"
-	"github.com/smy20011/s1go/stage1stpb"
-	"github.com/smy20011/s1go/storage"
 	"log"
 	"sync"
 	"time"
+
+	"github.com/smy20011/s1go/client"
+	"github.com/smy20011/s1go/stage1stpb"
+	"github.com/smy20011/s1go/storage"
 )
 
 var (
@@ -18,6 +19,7 @@ var (
 	maxThreadUpdate = 500
 	dbFile          = flag.String("db", "Stage1st.BoltDB", "Path to stage1st database.")
 	networkVar      = expvar.NewMap("crawler/network")
+	lastFetchVar    = expvar.NewInt("carwler/lastfetchtime")
 )
 
 type Crawler struct {
@@ -43,6 +45,7 @@ func (c *Crawler) Login(username, password string) error {
 func (c *Crawler) FetchAllForums() error {
 	forums, err := c.S1Client.GetForums()
 	networkVar.Add("forum", 1)
+	logFetch()
 	if err != nil {
 		return err
 	}
@@ -71,6 +74,7 @@ func (c *Crawler) fetchForum(forum client.Forum) (err error) {
 	threads := []client.Thread{}
 	for i := 0; i < depth; i++ {
 		networkVar.Add("thread", 1)
+		logFetch()
 		newThreads, err := c.S1Client.GetThreads(forum, i+1)
 		if err != nil {
 			return err
@@ -133,6 +137,7 @@ func (c *Crawler) fetchNewPosts(thread client.Thread, fetched int) (posts []*cli
 	for _, page := range pages {
 		// +1 Because S1 use 1 as the first page of thread.
 		networkVar.Add("post", 1)
+		logFetch()
 		p, err := c.S1Client.GetPosts(thread, page+1)
 		if err != nil {
 			return posts, err
@@ -161,4 +166,8 @@ func getPagesToFetch(fetched, current int) (result []int) {
 		}
 	}
 	return
+}
+
+func logFetch() {
+	lastFetchVar.Set(time.Now().Unix())
 }
